@@ -21,10 +21,10 @@ jobs:
         include-prerelease: true
 
     - name: Restore dependencies
-      run: dotnet restore AlQalam.sln
+      run: dotnet restore AlQalam.slnx
 
     - name: Build solution
-      run: dotnet build AlQalam.sln --no-restore -c Release
+      run: dotnet build AlQalam.slnx --no-restore -c Release
 
     - name: Run tests
-      run: dotnet test AlQalam.sln --no-build -c Release --verbosity normal
+      run: dotnet test AlQalam.slnx --no-build -c Release --verbosity normal

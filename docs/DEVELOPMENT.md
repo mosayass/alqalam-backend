@@ -109,7 +109,7 @@ dotnet run --project src/Host/AlQalam.Host.csproj --launch-profile http
 
 Run the complete test suite:
 ```powershell
-dotnet test AlQalam.sln
+dotnet test AlQalam.slnx
 ```
 
 Tests include:

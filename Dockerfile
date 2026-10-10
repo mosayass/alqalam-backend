@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
 
 # Copy CPM and project files first to cache layer dependencies
-COPY Directory.Build.props Directory.Packages.props AlQalam.sln AlQalam.slnx ./
+COPY Directory.Build.props Directory.Packages.props AlQalam.slnx ./
 COPY src/Host/AlQalam.Host.csproj src/Host/
 COPY src/Shared/AlQalam.Shared.csproj src/Shared/
 COPY src/Modules/Users/Core/AlQalam.Users.Core.csproj src/Modules/Users/Core/
@@ -13,7 +13,7 @@ COPY src/Modules/Memorization/Infrastructure/AlQalam.Memorization.Infrastructure
 COPY src/Modules/Dataset/Core/AlQalam.Dataset.Core.csproj src/Modules/Dataset/Core/
 COPY src/Modules/Dataset/Infrastructure/AlQalam.Dataset.Infrastructure.csproj src/Modules/Dataset/Infrastructure/
 
-RUN dotnet restore AlQalam.sln
+RUN dotnet restore AlQalam.slnx
 
 # Copy the rest of the source tree
 COPY src/ src/
