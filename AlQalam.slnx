@@ -1,0 +1,31 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/AlQalam.Host.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Dataset/" />
+  <Folder Name="/src/Modules/Dataset/Core/">
+    <Project Path="src/Modules/Dataset/Core/AlQalam.Dataset.Core.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Dataset/Infrastructure/">
+    <Project Path="src/Modules/Dataset/Infrastructure/AlQalam.Dataset.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Memorization/" />
+  <Folder Name="/src/Modules/Memorization/Core/">
+    <Project Path="src/Modules/Memorization/Core/AlQalam.Memorization.Core.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Memorization/Infrastructure/">
+    <Project Path="src/Modules/Memorization/Infrastructure/AlQalam.Memorization.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Users/" />
+  <Folder Name="/src/Modules/Users/Core/">
+    <Project Path="src/Modules/Users/Core/AlQalam.Users.Core.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Users/Infrastructure/">
+    <Project Path="src/Modules/Users/Infrastructure/AlQalam.Users.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/AlQalam.Shared.csproj" />
+  </Folder>
+</Solution>

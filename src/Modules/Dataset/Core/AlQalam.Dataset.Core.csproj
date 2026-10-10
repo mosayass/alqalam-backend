@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>AlQalam.Dataset.Core</RootNamespace>
+    <AssemblyName>AlQalam.Dataset.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Shared\AlQalam.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

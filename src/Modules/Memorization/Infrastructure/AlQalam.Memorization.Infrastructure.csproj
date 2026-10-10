@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>AlQalam.Memorization.Infrastructure</RootNamespace>
+    <AssemblyName>AlQalam.Memorization.Infrastructure</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\AlQalam.Memorization.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\AlQalam.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

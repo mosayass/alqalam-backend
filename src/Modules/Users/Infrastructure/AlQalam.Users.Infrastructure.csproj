@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>AlQalam.Users.Infrastructure</RootNamespace>
+    <AssemblyName>AlQalam.Users.Infrastructure</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\AlQalam.Users.Core.csproj" />
+    <ProjectReference Include="..\..\..\Shared\AlQalam.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

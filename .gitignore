@@ -1,0 +1,48 @@
+## Visual Studio & JetBrains & VS Code
+.vs/
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Build outputs
+[Bb]in/
+[Oo]bj/
+artifacts/
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+## Environment & Secrets
+.env
+.env.*
+!.env.example
+appsettings*.local.json
+
+## Machine learning model artifacts
+*.onnx
+*.onnx.*
+*.pt
+*.pth
+*.bin
+*.weights
+
+## OS generated
+[Tt]humbs.db
+ehthumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+## Node & Web (if any local toolings are used)
+node_modules/
+npm-debug.log*
+
+## Logs
+*.log
+logs/
