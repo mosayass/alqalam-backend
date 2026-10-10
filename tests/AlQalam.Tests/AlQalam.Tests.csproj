@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>AlQalam.Tests</RootNamespace>
+    <AssemblyName>AlQalam.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Shared\AlQalam.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Users\Core\AlQalam.Users.Core.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Users\Infrastructure\AlQalam.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Memorization\Core\AlQalam.Memorization.Core.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Memorization\Infrastructure\AlQalam.Memorization.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Dataset\Core\AlQalam.Dataset.Core.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Dataset\Infrastructure\AlQalam.Dataset.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Host\AlQalam.Host.csproj" />
+  </ItemGroup>
+
+</Project>

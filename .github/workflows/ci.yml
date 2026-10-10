@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+        include-prerelease: true
+
+    - name: Restore dependencies
+      run: dotnet restore AlQalam.sln
+
+    - name: Build solution
+      run: dotnet build AlQalam.sln --no-restore -c Release
+
+    - name: Run tests
+      run: dotnet test AlQalam.sln --no-build -c Release --verbosity normal
