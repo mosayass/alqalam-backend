@@ -76,6 +76,7 @@ Work in these phases sequentially. Do not implement every phase in one giant cha
 - **Decouple Issuance from Credentials:** Keep credential checking separate from token generation (`IssueTokens(user, device)`) so future Google/Apple flows plug seamlessly into the exact same issuance pipeline.
 - **Schema Forward-Compatibility:** Ensure the user identity schema allows nullable password hashes to accommodate future external/social logins.
 - **Undecided Mastery/Streak Formulas:** If mastery score or streak boundary/time-zone semantics remain undecided in `ARCHITECTURE.md`, return raw counts and baseline activity first; do not invent proprietary formulas.
+- **No Role System Yet:** Authorization is ownership-based only. Use `.RequireAuthorization()` with named policies on endpoint groups so a future `Admin` policy is purely additive.
 
 ---
 
@@ -98,6 +99,12 @@ Work in these phases sequentially. Do not implement every phase in one giant cha
 - **Token Exchange Pattern:** Flutter app acquires provider ID token from native SDKs and submits to `POST /api/v1/auth/external/{provider}`. Backend validates signature, issuer, and audience against platform-specific configuration before issuing standard app tokens.
 - **Account Linking Policy:** Do not auto-link accounts purely on matching email strings (prevents account takeover attacks). Require explicit re-authentication or verified-email confirmation.
 - **Apple Quirks:** Account for Apple Private Relay emails (`@privaterelay.appleid.com`) and the fact that user profile display names are only sent on the initial authorization.
+
+### ⚠️ Reminders & Decisions for Admin Panel / Roles:
+- **Single `Admin` role only:** Add one `Admin` role via ASP.NET Core Identity roles, a `role` claim in the JWT, and a named `Admin` authorization policy. No permissions/RBAC matrix unless new actors (e.g., moderators, circle teachers) are concretely required.
+- **Separate route group:** Map admin endpoints under `/api/v1/admin/...` in `Host/Endpoints/`, protected by the `Admin` policy.
+- **Stricter admin security:** MFA, shorter token lifetimes, and audit logging of admin actions.
+- **Revisit roles when Study Circles arrive:** Teacher/supervisor actors in circles may require a real role design at that point.
 
 ---
 

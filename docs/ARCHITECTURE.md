@@ -65,6 +65,7 @@ Do not infer that millions of registered users automatically require multiple da
 - Use centralized ProblemDetails/error mapping and validation.
 - Require authentication and enforce ownership for per-user resources.
 - Keep health endpoints separate from business routes.
+- **Authorization model:** MVP has a single user type, so authorization is ownership-based, with no role system. Protect endpoints with named authorization policies (`.RequireAuthorization()` / `.RequireAuthorization("PolicyName")`) instead of scattered inline role checks, so adding an `Admin` role later is additive. Do not build a permissions/RBAC matrix without concrete requirements.
 
 ## 7. Local and production hosting
 - Docker Compose provides local PostgreSQL and MinIO, with named volumes and health checks.
