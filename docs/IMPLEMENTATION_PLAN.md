@@ -37,15 +37,45 @@ Work in these phases sequentially. Do not implement every phase in one giant cha
 ---
 
 ## Phase 3 — Users and Memorization MVP [NEXT RECOMMENDED STEP]
-- Implement first-party auth with ASP.NET Core Identity in `Users.Infrastructure` (no custom password cryptography).
-- Implement JWT access tokens (short-lived) and SHA-256 hashed refresh-token storage with rotation and revocation.
-- Add Minimal API endpoints in `Host/Endpoints/Users/`: `register`, `login`, `refresh`, `logout`, and authenticated `me/profile`.
-- Implement first retry-safe practice-session ingestion endpoint (`POST /api/v1/memorization/sessions`) in `Memorization`.
-- Derive resource ownership server-side from claims (never trust request body `UserId`).
+
+### Phase 3.1 — Users Core Auth Slice: Register & Login Only [CURRENT FOCUS]
+- Implement minimal entities/enums needed strictly for Register & Login:
+  - `MemorizationLevel` domain enum (`Beginner`, `Intermediate`, `Advanced`) in `Users.Core`.
+  - `AppUser` (`users.users`) extending `IdentityUser<Guid>` in `Users.Infrastructure` (nullable `PasswordHash` for future social login compatibility).
+  - `RefreshToken` (`users.refresh_tokens`) rich entity with private setters and domain methods (`Revoke`, `Create`).
+- Commands & Handlers (in `Users.Core`):
+  - `RegisterUserCommand` & `RegisterUserHandler` (validates, delegates to `IIdentityService`, returns `Result<UserSummaryDto>`).
+  - `LoginCommand` & `LoginHandler` (verifies credentials, issues JWT access token and SHA-256 hashed refresh token).
+- Infrastructure & Persistence (in `Users.Infrastructure`):
+  - `IIdentityService` implementation wrapping `UserManager<AppUser>`.
+  - `UsersDbContext` entity configurations in `users` schema.
+  - Initial EF Core migration for `users` schema (`__UsersMigrationsHistory`).
+- Endpoints (in `Host/Endpoints/Users/`):
+  - `POST /api/v1/users/register`
+  - `POST /api/v1/users/login`
+- Integration and unit tests for registration validation, duplicate email handling, password verification, and JWT/refresh token generation.
+
+### Phase 3.2 — Users Session, Profile & Preferences Slice
+- `POST /api/v1/users/refresh` (family-based refresh token rotation and reuse detection).
+- `POST /api/v1/users/logout` (session revocation).
+- `GET /api/v1/users/me` (profile query implemented in Infrastructure via direct EF projection).
+- `UserPreferences` entity, `GET` and `PUT /api/v1/users/preferences`.
+
+### Phase 3.3 — Memorization Practice Session Ingestion Slice
+- Idempotent session ingestion (`POST /api/v1/memorization/sessions`).
 - Enforce idempotency via database uniqueness on `(UserId, ClientSessionId)`.
+- Rich domain entity `PracticeSession` and `SessionAttempt` with private setters.
 - Store client event times (`ClientStartedAt`, `ClientCompletedAt`) separately from `ServerReceivedAt`.
-- Implement paginated session history query (`GET /api/v1/memorization/sessions`) and progress summary (`GET /api/v1/memorization/progress`).
-- Add integration tests for authentication, refresh-token rotation, session idempotency, and query pagination.
+
+### Phase 3.4 — Memorization Queries Slice
+- `GET /api/v1/memorization/sessions` (paginated history query implemented directly in Infrastructure).
+- `GET /api/v1/memorization/progress` (progress summary query).
+
+### ⚠️ Reminders & Watch-outs for Phase 3:
+- **Mobile-friendly Token Lifetimes & Scoping:** Use short access tokens (~10–15 mins) and long sliding refresh tokens (~30–90 days) stored SHA-256 hashed and device-scoped so mobile users don't face frequent re-logins after offline periods.
+- **Decouple Issuance from Credentials:** Keep credential checking separate from token generation (`IssueTokens(user, device)`) so future Google/Apple flows plug seamlessly into the exact same issuance pipeline.
+- **Schema Forward-Compatibility:** Ensure the user identity schema allows nullable password hashes to accommodate future external/social logins.
+- **Undecided Mastery/Streak Formulas:** If mastery score or streak boundary/time-zone semantics remain undecided in `ARCHITECTURE.md`, return raw counts and baseline activity first; do not invent proprietary formulas.
 
 ---
 
@@ -59,15 +89,20 @@ Work in these phases sequentially. Do not implement every phase in one giant cha
 
 ---
 
-## Phase 5 — Challenges & Leaderboards [POST-MVP]
+## Phase 5 — Challenges, Leaderboards & Social Auth [POST-MVP]
 - Grounded in Figma screens `الإنجاز والتنافس` (`id: 1:1175` / `1:1661`).
 - Weekly honor podium ("منصة شرف الأسبوع الحالية"), user tiers (Gold / Platinum), and points leaderboard.
 - Quran study circles ("الحلقات") and seasonal memorization competitions.
 
+### ⚠️ Reminders & Decisions for Social Auth (Google / Apple Sign-in):
+- **Token Exchange Pattern:** Flutter app acquires provider ID token from native SDKs and submits to `POST /api/v1/auth/external/{provider}`. Backend validates signature, issuer, and audience against platform-specific configuration before issuing standard app tokens.
+- **Account Linking Policy:** Do not auto-link accounts purely on matching email strings (prevents account takeover attacks). Require explicit re-authentication or verified-email confirmation.
+- **Apple Quirks:** Account for Apple Private Relay emails (`@privaterelay.appleid.com`) and the fact that user profile display names are only sent on the initial authorization.
+
 ---
 
 ## Exit criteria for every phase
-- Build and tests pass with zero errors.
+- Build and tests pass with zero errors (run only when code actually changed; skipped for docs-only updates).
 - No real secret is committed.
 - Documentation and architecture docs remain aligned with implementation.
 - Work is committed locally and pushed to the configured remote when safe.

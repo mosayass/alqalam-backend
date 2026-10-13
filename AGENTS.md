@@ -8,6 +8,11 @@ Before changing code, read:
 
 These files record the product context and decisions already agreed with the project owner. Treat them as constraints, not suggestions. If new information makes a decision unsafe or technically impossible, explain the conflict and propose the smallest change instead of silently changing architecture.
 
+## Strict Scope & Direct Answering Rule (CRITICAL)
+- **Answer strictly what is asked**: Do not jump ahead, do not prepare unrequested code, components, or steps that have not been explicitly asked for and approved.
+- **No unsolicited lengthy previews**: Avoid long outputs that run through unapproved future implementations.
+- **Strict single-step focus**: Focus 100% on the single immediate question or task. Wait for explicit approval before proceeding to any next step.
+
 ## Product summary
 AlQalam is a tablet-first and web Quran memorization and recitation-verification application. The client captures stylus handwriting and performs handwriting recognition, Quran-ayah retrieval, normalization, and word/character alignment on-device. The backend supports identity, progress synchronization, dataset collection, and model manifest delivery; it is not the normal inference engine.
 
@@ -54,4 +59,4 @@ AlQalam is a tablet-first and web Quran memorization and recitation-verification
 - Update architecture/development docs when making an intentional decision or discovering a limitation. Record unresolved product questions rather than inventing business rules.
 - Do not create `README.md` unless the owner asks for one. Keep setup notes in `docs/`.
 - Never use `git push --force`, destructive resets, or history rewriting. Do not discard unrelated files or silently replace an existing Git remote.
-- At the end of each phase: run and report the relevant `dotnet restore`, `dotnet build`, `dotnet test`, and any Docker/integration checks that are feasible. State honestly what was not run and why. Summarize changed files, decisions, test results, and remaining issues.
+- Run and report `dotnet restore`, `dotnet build`, `dotnet test`, and feasible integration checks only when application or test code actually changed. If changes are strictly documentation/markdown, skip build and test. State honestly what was run (or skipped and why). Summarize changed files, decisions, and outcomes.

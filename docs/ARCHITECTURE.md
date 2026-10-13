@@ -20,7 +20,7 @@ Endpoint code maps HTTP contracts to module use cases and maps results to HTTP o
 - `Module.Core` → `Shared` only (plus carefully justified non-infrastructure libraries if actually needed).
 - `Module.Infrastructure` → its own `Module.Core` and `Shared`, plus persistence/external integration packages.
 - `Host` → all module Core and Infrastructure projects, plus `Shared`.
-- No business module references another business module.
+- No business module references another business module's `Core` or `Infrastructure`. If cross-module communication is needed later, introduce a dedicated `<Module>.Contracts` project containing public contracts/DTOs/events only.
 - No Infrastructure project references Host.
 
 Prefer explicit interfaces/contracts for cross-module coordination. Avoid a global hidden event-handler web.
@@ -40,11 +40,24 @@ Prefer module-owned records referencing another module's ID over cross-module EF
 
 Do not infer that millions of registered users automatically require multiple databases. Optimize based on actual workload and measurements. Preserving module ownership makes later extraction easier, but does not make it automatic.
 
-## 5. Application patterns
-- Use explicit use cases/handlers for writes and nontrivial reads; do not create ceremony for trivial queries.
-- Use a small `Result<T>` / `Error` model for expected failures; let unexpected errors reach centralized exception handling.
-- MediatR is optional, not an architectural requirement. If proposed, verify current licensing and explain the benefit before adding it. Direct calls to application service/handler interfaces are fine.
-- No message broker or transactional outbox initially. Add reliable durable work processing for background ingestion as needed. Revisit an outbox only if a committed database change must reliably publish an external message/side effect.
+## 5. Application patterns & CQRS
+- **Use Case Handlers over MediatR**: Do not use MediatR. Register handlers and interfaces directly into ASP.NET Core Dependency Injection for compile-time safety and zero reflection overhead.
+- **Commands (Writes)**:
+  - Command records and their handler implementations live in `Module.Core`.
+  - **Rich Domain Model**: Domain entities must be encapsulated with private/protected setters and explicit domain methods to protect domain invariants. Do not create anemic `{ get; set; }` property bags.
+  - **Aggregate-Specific Repositories**: To abstract persistence without referencing EF Core in `Core`, define focused, aggregate-specific repository interfaces in `Module.Core` (e.g., `ISessionRepository`, `ISampleRepository`, or `IIdentityService` for Identity-managed accounts). Do not use generic `IRepository<T>` wrappers.
+  - Repository implementations live in `Module.Infrastructure` backed by the module's `DbContext`.
+- **Queries (Reads)**:
+  - The Query record, return DTOs, and `IQueryHandler<TQuery, TResult>` interface live in `Module.Core`.
+  - **Query Handler implementations live in `Module.Infrastructure`**. Because queries are pure database projections with zero domain logic, placing implementations in Infrastructure allows direct use of EF Core (`.AsNoTracking()`, `.Select()` straight to DTOs) for maximum performance without forcing `Module.Core` to reference EF Core. Do not introduce intermediate pass-through query services.
+- **Operational Failures**: Use a small `Result<T>` / `Error` model for expected business failures; let unexpected faults bubble up to centralized exception handling and ProblemDetails.
+- **Cross-Module Communication**:
+  - Modules do not reference one another.
+  - Prefer ID-referencing (sharing only entity IDs, such as `UserId` `Guid`).
+  - For unavoidable runtime queries, expose minimal contract interfaces in `Shared` (or `<Module>.Contracts`).
+  - **Integration Events**: Keep deferred until an actual cross-module event is required. When introduced, evaluate non-blocking background dispatch (`System.Threading.Channels`) or the Transactional Outbox pattern so subscriber failures never fail or roll back the publishing module.
+- **Module Ownership of Social Auth**:
+  - External authentication (Google and Apple) belongs directly in the `Users` module, mapped via ASP.NET Core Identity's `user_logins` table. Neither separate modules nor duplicate identity stores should be created.
 
 ## 6. API conventions
 - Version API routes with `/api/v1/...`.
@@ -94,7 +107,7 @@ Clients should download to a temporary location, verify integrity, install atomi
 - Exact mastery-score formula and streak boundary/time-zone semantics.
 - Exact handwriting sample formats and retention duration.
 - Dataset consent wording/legal policy and whether raw strokes, rendered images, or both are retained.
-- Production identity-provider choice if a third-party OIDC provider becomes preferred.
+- Social login (Google / Apple) token exchange and account-linking policy (post-MVP; first-party ASP.NET Core Identity with password auth in MVP).
 - Model artifact hosting provider, release approval workflow, and rollout percentages.
 
 Choose conservative defaults only where implementation needs them, document the choice, and keep the product-policy questions explicit.
