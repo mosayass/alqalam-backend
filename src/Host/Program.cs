@@ -11,6 +11,7 @@ using AlQalam.Users.Core;
 using AlQalam.Users.Infrastructure;
 using AlQalam.Users.Infrastructure.Persistence;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,7 @@ app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();

@@ -99,9 +99,10 @@ dotnet run --project src/Host/AlQalam.Host.csproj --launch-profile http
   - Returns `200 OK` `{ "status": "ready" }` when dependencies are healthy.
   - Returns `503 Service Unavailable` `{ "status": "unhealthy" }` when dependencies are down, without leaking sensitive internals or credentials.
 
-### OpenAPI Specification
+### OpenAPI & Interactive API Documentation (Scalar)
 - When running in Development mode:
-  - `GET http://localhost:5000/openapi/v1.json`
+  - **OpenAPI Schema**: `GET http://localhost:5000/openapi/v1.json`
+  - **Scalar Interactive UI**: `GET http://localhost:5000/scalar/v1` (modern interactive API documentation replacing Swagger UI)
 
 ---
 

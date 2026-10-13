@@ -24,6 +24,7 @@ TestResults/
 .env.*
 !.env.example
 appsettings*.local.json
+.agents/
 
 ## Machine learning model artifacts
 *.onnx
