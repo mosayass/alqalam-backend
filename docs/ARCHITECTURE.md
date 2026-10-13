@@ -58,6 +58,12 @@ Do not infer that millions of registered users automatically require multiple da
   - **Integration Events**: Keep deferred until an actual cross-module event is required. When introduced, evaluate non-blocking background dispatch (`System.Threading.Channels`) or the Transactional Outbox pattern so subscriber failures never fail or roll back the publishing module.
 - **Module Ownership of Social Auth**:
   - External authentication (Google and Apple) belongs directly in the `Users` module, mapped via ASP.NET Core Identity's `user_logins` table. Neither separate modules nor duplicate identity stores should be created.
+- **Account / Profile Split**:
+  - The user model is partitioned into security and domain responsibilities sharing the identical `Guid` primary key:
+    - `AppUser : IdentityUser<Guid>` lives in `Users.Infrastructure` mapped to `users.users`. It is strictly a persistence model for authentication and security credentials (email, password hash, security stamp, lockout). It contains zero domain or business fields.
+    - `UserProfile` lives in `Users.Core` mapped to `users.user_profiles`. It encapsulates learner domain concepts (`UserId` PK matching account, `FullName`, `MemorizationLevel?`, `CreatedAtUtc`) as a rich domain entity with private setters and invariant-enforcing static factory methods.
+    - `RefreshToken` lives in `Users.Core` mapped to `users.refresh_tokens`. Plaintext tokens are returned once to callers; only SHA-256 hashed representations are stored. Includes `FamilyId` for future rotation tracking.
+  - No EF navigation properties exist between `AppUser` and `UserProfile`. Persistence is bound via a database foreign key constraint (`user_profiles.user_id -> users.id`) in the `users` schema. Registration persists both atomically in a single transaction.
 
 ## 6. API conventions
 - Version API routes with `/api/v1/...`.
@@ -66,6 +72,7 @@ Do not infer that millions of registered users automatically require multiple da
 - Require authentication and enforce ownership for per-user resources.
 - Keep health endpoints separate from business routes.
 - **Authorization model:** MVP has a single user type, so authorization is ownership-based, with no role system. Protect endpoints with named authorization policies (`.RequireAuthorization()` / `.RequireAuthorization("PolicyName")`) instead of scattered inline role checks, so adding an `Admin` role later is additive. Do not build a permissions/RBAC matrix without concrete requirements.
+- **Login requires a confirmed email:** Identity is configured with `RequireConfirmedEmail = true`. Unknown email, wrong password, locked-out account, and unconfirmed email all return the same generic `401 Unauthorized` ProblemDetails, so responses never reveal whether an account exists or its state (anti-enumeration). The client shows a neutral message (e.g., "Invalid credentials or email not yet confirmed").
 
 ## 7. Local and production hosting
 - Docker Compose provides local PostgreSQL and MinIO, with named volumes and health checks.
@@ -109,6 +116,9 @@ Clients should download to a temporary location, verify integrity, install atomi
 - Exact handwriting sample formats and retention duration.
 - Dataset consent wording/legal policy and whether raw strokes, rendered images, or both are retained.
 - Social login (Google / Apple) token exchange and account-linking policy (post-MVP; first-party ASP.NET Core Identity with password auth in MVP).
+- Production transactional email delivery provider (development environment logs confirmation tokens to console; provider choice, templates, and delivery SLA remain open).
+- Email confirmation token lifespan and resend-confirmation flow/policy.
+- Trade-off between returning `409 Conflict` on duplicate email registration (per Story 1.1) versus strict account anti-enumeration prevention.
 - Model artifact hosting provider, release approval workflow, and rollout percentages.
 
 Choose conservative defaults only where implementation needs them, document the choice, and keep the product-policy questions explicit.

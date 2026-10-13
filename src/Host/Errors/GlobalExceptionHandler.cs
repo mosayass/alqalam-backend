@@ -15,6 +15,22 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
             "An unhandled exception occurred while processing request {Path}",
             httpContext.Request.Path);
 
+        if (exception is BadHttpRequestException badHttpRequestException)
+        {
+            var badRequestProblem = new ProblemDetails
+            {
+                Status = badHttpRequestException.StatusCode,
+                Title = "Invalid request.",
+                Detail = badHttpRequestException.Message,
+                Type = "https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.1",
+                Instance = httpContext.Request.Path
+            };
+
+            httpContext.Response.StatusCode = badHttpRequestException.StatusCode;
+            await httpContext.Response.WriteAsJsonAsync(badRequestProblem, cancellationToken);
+            return true;
+        }
+
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,

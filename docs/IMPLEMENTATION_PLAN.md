@@ -36,24 +36,31 @@ Work in these phases sequentially. Do not implement every phase in one giant cha
 
 ---
 
-## Phase 3 — Users and Memorization MVP [NEXT RECOMMENDED STEP]
-
-### Phase 3.1 — Users Core Auth Slice: Register & Login Only [CURRENT FOCUS]
-- Implement minimal entities/enums needed strictly for Register & Login:
+## Phase 3 — Users and Memorization MVP
+ 
+### Phase 3.1 — Users Core Auth Slice: Register, Confirm Email & Login [COMPLETED]
+- [x] Account / Profile split:
+  - `UserProfile` (`users.user_profiles`) rich domain entity in `Users.Core` for learner domain data (`UserId` PK matching account, `FullName`, `MemorizationLevel?`, `CreatedAtUtc`).
+  - `AppUser` (`users.users`) extending `IdentityUser<Guid>` in `Users.Infrastructure` for credentials/security only (no domain fields).
+  - `RefreshToken` (`users.refresh_tokens`) rich domain entity in `Users.Core` storing SHA-256 hash, `FamilyId`, `DeviceId`, and active/revoke domain methods.
   - `MemorizationLevel` domain enum (`Beginner`, `Intermediate`, `Advanced`) in `Users.Core`.
-  - `AppUser` (`users.users`) extending `IdentityUser<Guid>` in `Users.Infrastructure` (nullable `PasswordHash` for future social login compatibility).
-  - `RefreshToken` (`users.refresh_tokens`) rich entity with private setters and domain methods (`Revoke`, `Create`).
-- Commands & Handlers (in `Users.Core`):
-  - `RegisterUserCommand` & `RegisterUserHandler` (validates, delegates to `IIdentityService`, returns `Result<UserSummaryDto>`).
-  - `LoginCommand` & `LoginHandler` (verifies credentials, issues JWT access token and SHA-256 hashed refresh token).
-- Infrastructure & Persistence (in `Users.Infrastructure`):
+- [x] Commands & Handlers (in `Users.Core`):
+  - `RegisterUserCommand` & `RegisterUserHandler` (validates, executes in atomic transaction with `IUsersUnitOfWork`, delegates to `IIdentityService`, sends email via `IConfirmationEmailSender`, returns `Result<UserSummaryDto>`).
+  - `ConfirmEmailCommand` & `ConfirmEmailHandler` (verifies token via `IIdentityService`, idempotent 204 on already confirmed).
+  - `LoginCommand` & `LoginHandler` (verifies credentials, issues JWT access token and SHA-256 hashed refresh token; generic anti-enumeration 401 across unknown email, unconfirmed email, wrong password, lockout).
+- [x] Infrastructure & Persistence (in `Users.Infrastructure`):
   - `IIdentityService` implementation wrapping `UserManager<AppUser>`.
-  - `UsersDbContext` entity configurations in `users` schema.
-  - Initial EF Core migration for `users` schema (`__UsersMigrationsHistory`).
-- Endpoints (in `Host/Endpoints/Users/`):
-  - `POST /api/v1/users/register`
-  - `POST /api/v1/users/login`
-- Integration and unit tests for registration validation, duplicate email handling, password verification, and JWT/refresh token generation.
+  - `ITokenService` issuing JWT and persisting hashed `RefreshToken`.
+  - `IConfirmationEmailSender` development logger implementation.
+  - `UsersDbContext` inheriting `IdentityUserContext<AppUser, Guid>` in `users` schema with dedicated entity configurations.
+  - Initial EF Core migration for `users` schema (`InitialUsers`).
+- [x] Endpoints & Security (in `Host/Endpoints/Users/`):
+  - `POST /api/v1/users/register` (201 Created with `UserSummaryDto`).
+  - `POST /api/v1/users/confirm-email` (204 NoContent, 400 ProblemDetails).
+  - `POST /api/v1/users/login` (200 OK with `AuthTokensDto`, 401 ProblemDetails).
+  - Configured JWT Bearer authentication and strongly typed `JwtOptions` validated at startup.
+  - ASP.NET Core built-in rate limiting (`auth-endpoints`) on auth route group.
+- [x] Test suite: 74 unit and integration tests covering domain invariants, refresh token lifecycle, handler workflows, anti-enumeration security, and HTTP endpoints.
 
 ### Phase 3.2 — Users Session, Profile & Preferences Slice
 - `POST /api/v1/users/refresh` (family-based refresh token rotation and reuse detection).

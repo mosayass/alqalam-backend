@@ -74,6 +74,13 @@ Configuration is defined in [`src/Host/appsettings.json`](file:///c:/Users/mosa/
     "BucketName": "alqalam-dataset",
     "AccessKey": "minioadmin",
     "SecretKey": "minioadmin"
+  },
+  "Jwt": {
+    "Issuer": "AlQalam",
+    "Audience": "AlQalam.Clients",
+    "SigningKey": "",
+    "AccessTokenMinutes": 15,
+    "RefreshTokenDays": 30
   }
 }
 ```
@@ -81,6 +88,28 @@ Configuration is defined in [`src/Host/appsettings.json`](file:///c:/Users/mosa/
 ### Critical Note on MinIO Endpoints
 - **`InternalEndpoint`**: The endpoint used by the API server or container to connect to MinIO (e.g. `http://minio:9000` inside Docker or `http://localhost:9000` during local debugging).
 - **`PublicEndpoint`**: The endpoint embedded in client/browser-facing pre-signed URLs (e.g. `http://localhost:9000` or `https://s3.alqalam.app`). A Docker-internal hostname such as `http://minio:9000` is **not reachable** from a client device or web browser.
+
+### JWT Authentication Configuration
+- **`SigningKey`**: Required HMAC-SHA256 signing secret key (minimum 32 characters / 256 bits).
+- For local native execution, set `Jwt__SigningKey` via environment variable or in local `.env`:
+  ```powershell
+  $env:Jwt__SigningKey = "your_dev_secret_key_at_least_32_characters_long!"
+  ```
+- Startup validation immediately fails if `SigningKey` is missing or shorter than 32 characters.
+
+### Local Development Email Confirmation
+In development, no SMTP server is configured yet. When a user registers via `POST /api/v1/users/register`, the development `LoggingConfirmationEmailSender` logs the confirmation token to the application console:
+```text
+info: AlQalam.Users.Infrastructure.Services.LoggingConfirmationEmailSender[0]
+      [DEV EMAIL] Confirmation link for user@example.com (UserId: 7b81...): Token: CfDJ8...
+```
+To confirm the email locally, copy the `userId` and `token` from the console output and send a `POST` request to `/api/v1/users/confirm-email`:
+```json
+{
+  "userId": "7b81...",
+  "token": "CfDJ8..."
+}
+```
 
 ---
 

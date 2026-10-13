@@ -5,11 +5,11 @@ using Xunit;
 
 namespace AlQalam.Tests.Host;
 
-public class HealthEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+public class HealthEndpointsTests : IClassFixture<AlQalamWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly AlQalamWebApplicationFactory _factory;
 
-    public HealthEndpointsTests(WebApplicationFactory<Program> factory)
+    public HealthEndpointsTests(AlQalamWebApplicationFactory factory)
     {
         _factory = factory;
     }
