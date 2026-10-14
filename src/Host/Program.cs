@@ -20,6 +20,9 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
+// Load environment variables from .env file if present
+EnvFileLoader.Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Cross-cutting / host services
