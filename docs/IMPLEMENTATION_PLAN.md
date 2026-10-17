@@ -63,10 +63,16 @@ Work in these phases sequentially. Do not implement every phase in one giant cha
 - [x] Test suite: 74 unit and integration tests covering domain invariants, refresh token lifecycle, handler workflows, anti-enumeration security, and HTTP endpoints.
 
 ### Phase 3.2 — Users Session, Profile & Preferences Slice
-- `POST /api/v1/users/refresh` (family-based refresh token rotation and reuse detection).
-- `POST /api/v1/users/logout` (session revocation).
-- `GET /api/v1/users/me` (profile query implemented in Infrastructure via direct EF projection).
-- `UserPreferences` entity, `GET` and `PUT /api/v1/users/preferences`.
+- [x] `POST /api/v1/users/refresh` (family-based refresh token rotation, SHA-256 hash lookup, and reuse detection invalidating whole token family).
+- [ ] `POST /api/v1/users/logout` (session revocation).
+- [ ] `GET /api/v1/users/me` (profile query implemented in Infrastructure via direct EF projection).
+- [ ] `UserPreferences` entity, `GET` and `PUT /api/v1/users/preferences`.
+
+### Phase 3.2.1 — Account Management & Security (Roadmap UX Essentials)
+- `POST /api/v1/users/resend-confirmation` (rate-limited email confirmation resend).
+- `POST /api/v1/users/forgot-password` & `POST /api/v1/users/reset-password` (Identity token password reset).
+- `POST /api/v1/users/change-password` (authenticated credential rotation with current password verification).
+- `DELETE /api/v1/users/me` (account deletion, cascade token revocation, profile wipe, and dataset anonymization).
 
 ### Phase 3.3 — Memorization Practice Session Ingestion Slice
 - Idempotent session ingestion (`POST /api/v1/memorization/sessions`).
@@ -101,6 +107,7 @@ Work in these phases sequentially. Do not implement every phase in one giant cha
 - Grounded in Figma screens `الإنجاز والتنافس` (`id: 1:1175` / `1:1661`).
 - Weekly honor podium ("منصة شرف الأسبوع الحالية"), user tiers (Gold / Platinum), and points leaderboard.
 - Quran study circles ("الحلقات") and seasonal memorization competitions.
+- Learner profile avatar upload via pre-signed private S3-compatible URLs.
 
 ### ⚠️ Reminders & Decisions for Social Auth (Google / Apple Sign-in):
 - **Token Exchange Pattern:** Flutter app acquires provider ID token from native SDKs and submits to `POST /api/v1/auth/external/{provider}`. Backend validates signature, issuer, and audience against platform-specific configuration before issuing standard app tokens.

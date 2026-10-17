@@ -185,6 +185,70 @@ public class UserEndpointsTests : IClassFixture<AlQalamWebApplicationFactory>
         Assert.Equal("Auth.InvalidCredentials", doc.RootElement.GetProperty("title").GetString());
     }
 
+    [Fact]
+    public async Task Refresh_WithValidToken_Returns200WithRotatedTokens()
+    {
+        var stubToken = AlQalam.Users.Core.Entities.RefreshToken.Create(
+            Guid.NewGuid(),
+            "valid-plain-token-hash",
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddMinutes(-5),
+            DateTimeOffset.UtcNow.AddDays(30));
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddScoped<ITokenService>(_ => new StubTokenService());
+                services.AddScoped<IRefreshTokenRepository>(_ => new StubRefreshTokenRepository(stubToken));
+                services.AddScoped<IUsersUnitOfWork>(_ => new StubUnitOfWork());
+            });
+        }).CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/v1/users/refresh", new
+        {
+            refreshToken = "valid-plain-token"
+        });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var tokens = await response.Content.ReadFromJsonAsync<AuthTokensDto>();
+        Assert.NotNull(tokens);
+        Assert.Equal("jwt.access.token.rotated", tokens.AccessToken);
+        Assert.Equal("refresh-plain-token.rotated", tokens.RefreshToken);
+    }
+
+    [Fact]
+    public async Task Refresh_WithRevokedToken_Returns401Unauthorized()
+    {
+        var revokedToken = AlQalam.Users.Core.Entities.RefreshToken.Create(
+            Guid.NewGuid(),
+            "revoked-token-hash",
+            Guid.NewGuid(),
+            DateTimeOffset.UtcNow.AddMinutes(-10),
+            DateTimeOffset.UtcNow.AddDays(30));
+        revokedToken.Revoke(DateTimeOffset.UtcNow.AddMinutes(-5));
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.AddScoped<ITokenService>(_ => new StubTokenService());
+                services.AddScoped<IRefreshTokenRepository>(_ => new StubRefreshTokenRepository(revokedToken));
+                services.AddScoped<IUsersUnitOfWork>(_ => new StubUnitOfWork());
+            });
+        }).CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/v1/users/refresh", new
+        {
+            refreshToken = "revoked-token"
+        });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(content);
+        Assert.Equal("Auth.InvalidRefreshToken", doc.RootElement.GetProperty("title").GetString());
+    }
+
     private sealed class StubIdentityService : IIdentityService
     {
         public bool ShouldReturnDuplicate { get; set; }
@@ -231,6 +295,21 @@ public class UserEndpointsTests : IClassFixture<AlQalamWebApplicationFactory>
             Task.FromResult<AlQalam.Users.Core.Entities.UserProfile?>(null);
     }
 
+    private sealed class StubRefreshTokenRepository(AlQalam.Users.Core.Entities.RefreshToken? existingToken = null) : IRefreshTokenRepository
+    {
+        public Task AddAsync(AlQalam.Users.Core.Entities.RefreshToken refreshToken, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task<AlQalam.Users.Core.Entities.RefreshToken?> GetByHashAsync(string tokenHash, CancellationToken cancellationToken = default) =>
+            Task.FromResult(existingToken?.TokenHash == tokenHash ? existingToken : null);
+
+        public Task UpdateAsync(AlQalam.Users.Core.Entities.RefreshToken refreshToken, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
+        public Task RevokeFamilyAsync(Guid familyId, DateTimeOffset revokedAtUtc, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+    }
+
     private sealed class StubUnitOfWork : IUsersUnitOfWork
     {
         public Task<IUsersTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) =>
@@ -263,5 +342,17 @@ public class UserEndpointsTests : IClassFixture<AlQalamWebApplicationFactory>
                 "refresh-plain-token",
                 now.AddDays(30)));
         }
+
+        public Task<AuthTokensDto> RotateTokensAsync(AlQalam.Users.Core.Entities.RefreshToken currentToken, CancellationToken cancellationToken = default)
+        {
+            var now = DateTimeOffset.UtcNow;
+            return Task.FromResult(new AuthTokensDto(
+                "jwt.access.token.rotated",
+                now.AddMinutes(15),
+                "refresh-plain-token.rotated",
+                now.AddDays(30)));
+        }
+
+        public string HashToken(string tokenPlaintext) => tokenPlaintext + "-hash";
     }
 }

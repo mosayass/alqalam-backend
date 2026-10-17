@@ -2,6 +2,7 @@ using AlQalam.Shared.Results;
 using AlQalam.Users.Core.Abstractions;
 using AlQalam.Users.Core.Commands.Login;
 using AlQalam.Users.Core.DTOs;
+using AlQalam.Users.Core.Entities;
 using Xunit;
 
 namespace AlQalam.Tests.Modules.Users.Core;
@@ -94,5 +95,10 @@ public class LoginHandlerTests
                 "refresh-token-plaintext",
                 now.AddDays(30)));
         }
+
+        public Task<AuthTokensDto> RotateTokensAsync(RefreshToken currentToken, CancellationToken cancellationToken = default) =>
+            throw new NotImplementedException();
+
+        public string HashToken(string tokenPlaintext) => "dummy-hash";
     }
 }

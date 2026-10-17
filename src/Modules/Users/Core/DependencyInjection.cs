@@ -1,5 +1,6 @@
 using AlQalam.Users.Core.Commands.ConfirmEmail;
 using AlQalam.Users.Core.Commands.Login;
+using AlQalam.Users.Core.Commands.RefreshToken;
 using AlQalam.Users.Core.Commands.RegisterUser;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<ConfirmEmailHandler>();
         services.AddScoped<LoginHandler>();
+        services.AddScoped<RefreshTokenHandler>();
 
         return services;
     }

@@ -1,6 +1,7 @@
 using AlQalam.Host.Errors;
 using AlQalam.Users.Core.Commands.ConfirmEmail;
 using AlQalam.Users.Core.Commands.Login;
+using AlQalam.Users.Core.Commands.RefreshToken;
 using AlQalam.Users.Core.Commands.RegisterUser;
 using AlQalam.Users.Core.DTOs;
 using AlQalam.Users.Core.Enums;
@@ -34,6 +35,12 @@ public static class UserEndpoints
             .Produces<AuthTokensDto>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
+        group.MapPost("/refresh", RefreshAsync)
+            .WithName("RefreshToken")
+            .WithSummary("Rotate refresh token and issue new token pair")
+            .Produces<AuthTokensDto>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
+
         return endpoints;
     }
 
@@ -51,6 +58,8 @@ public static class UserEndpoints
         string Email,
         string Password,
         string? DeviceId = null);
+
+    public sealed record RefreshTokenRequest(string RefreshToken);
 
     private static async Task<IResult> RegisterAsync(
         RegisterUserRequest request,
@@ -83,6 +92,16 @@ public static class UserEndpoints
         CancellationToken cancellationToken)
     {
         var command = new LoginCommand(request.Email, request.Password, request.DeviceId);
+        var result = await handler.HandleAsync(command, cancellationToken);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> RefreshAsync(
+        RefreshTokenRequest request,
+        RefreshTokenHandler handler,
+        CancellationToken cancellationToken)
+    {
+        var command = new RefreshTokenCommand(request.RefreshToken);
         var result = await handler.HandleAsync(command, cancellationToken);
         return result.ToHttpResult();
     }

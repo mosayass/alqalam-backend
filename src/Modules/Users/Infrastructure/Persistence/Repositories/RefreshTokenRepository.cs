@@ -22,4 +22,16 @@ public class RefreshTokenRepository(UsersDbContext context) : IRefreshTokenRepos
         context.RefreshTokens.Update(refreshToken);
         return Task.CompletedTask;
     }
+
+    public async Task RevokeFamilyAsync(Guid familyId, DateTimeOffset revokedAtUtc, CancellationToken cancellationToken = default)
+    {
+        var activeTokens = await context.RefreshTokens
+            .Where(r => r.FamilyId == familyId && r.RevokedAtUtc == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in activeTokens)
+        {
+            token.Revoke(revokedAtUtc);
+        }
+    }
 }

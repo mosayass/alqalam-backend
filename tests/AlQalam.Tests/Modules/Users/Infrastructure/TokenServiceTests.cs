@@ -61,6 +61,56 @@ public class TokenServiceTests
         Assert.True(_unitOfWork.SavedChanges);
     }
 
+    [Fact]
+    public async Task RotateTokensAsync_RevokesCurrentToken_AndIssuesNewTokenInSameFamily()
+    {
+        var tokenService = new TokenService(
+            Options.Create(_options),
+            _tokenRepo,
+            _unitOfWork,
+            _timeProvider);
+
+        var userId = Guid.NewGuid();
+        var familyId = Guid.NewGuid();
+        var currentToken = RefreshToken.Create(
+            userId,
+            "existing-token-hash",
+            familyId,
+            _timeProvider.GetUtcNow().AddDays(-1),
+            _timeProvider.GetUtcNow().AddDays(29),
+            "device-abc");
+
+        var result = await tokenService.RotateTokensAsync(currentToken);
+
+        Assert.NotNull(result);
+        Assert.False(string.IsNullOrWhiteSpace(result.AccessToken));
+        Assert.False(string.IsNullOrWhiteSpace(result.RefreshToken));
+
+        // Original token revoked
+        Assert.NotNull(currentToken.RevokedAtUtc);
+
+        // New token issued in same family with same deviceId
+        Assert.NotNull(_tokenRepo.AddedToken);
+        Assert.Equal(userId, _tokenRepo.AddedToken.UserId);
+        Assert.Equal(familyId, _tokenRepo.AddedToken.FamilyId);
+        Assert.Equal("device-abc", _tokenRepo.AddedToken.DeviceId);
+        Assert.NotEqual("existing-token-hash", _tokenRepo.AddedToken.TokenHash);
+        Assert.Null(_tokenRepo.AddedToken.RevokedAtUtc);
+    }
+
+    [Fact]
+    public void HashToken_ReturnsLowercaseHexSha256()
+    {
+        var tokenService = new TokenService(
+            Options.Create(_options),
+            _tokenRepo,
+            _unitOfWork,
+            _timeProvider);
+
+        var hash = tokenService.HashToken("sample-token");
+        Assert.Matches("^[0-9a-f]{64}$", hash);
+    }
+
     private sealed class FakeRefreshTokenRepository : IRefreshTokenRepository
     {
         public RefreshToken? AddedToken { get; private set; }
@@ -76,6 +126,15 @@ public class TokenServiceTests
 
         public Task UpdateAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
+
+        public Task RevokeFamilyAsync(Guid familyId, DateTimeOffset revokedAtUtc, CancellationToken cancellationToken = default)
+        {
+            if (AddedToken?.FamilyId == familyId)
+            {
+                AddedToken.Revoke(revokedAtUtc);
+            }
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeUnitOfWork : IUsersUnitOfWork
